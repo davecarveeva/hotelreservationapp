@@ -2,10 +2,8 @@ package Service;
 
 import model.Customer;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Set;
 
 public class CustomerService {
     private static CustomerService customerService;
@@ -22,10 +20,17 @@ public class CustomerService {
     }
 
     public void addCustomer(String email, String firstName, String lastName) {
-        if(customerList.contains(email)){
-            System.out.println("Customer with this email already exists!");
+        if (checkCustomer(email)) {
+            customerList.add(new Customer(firstName, lastName, email));
         }
-        customerList.add(new Customer(firstName, lastName, email));
+    }
+    public boolean checkCustomer(String email){
+        for(Customer customer : customerList){
+            if(customer.getEmail().equals(email)){
+                throw new IllegalArgumentException("Customer already exists");
+            }
+        }
+        return true;
     }
     public Customer getCustomer(String customerEmail){
         for(Customer customer : customerList){

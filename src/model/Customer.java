@@ -1,14 +1,12 @@
 package model;
 
-import java.util.*;
 import java.util.regex.Pattern;
 
 public class Customer {
-    private String firstName;
-    private String lastName;
-    private String email;
-    private final String emailCheck = "^(.+)@(.+).com";
-    private final Pattern pattern = Pattern.compile(emailCheck);
+    private final String firstName;
+    private final String lastName;
+    private final String email;
+
     public String getFirstName(){
         return firstName;
     }
@@ -20,6 +18,8 @@ public class Customer {
     }
 
     public Customer(String firstName, String lastName, String email){
+        final String emailCheck = "^(.+)@(.+).com";
+        final Pattern pattern = Pattern.compile(emailCheck);
         if(!pattern.matcher(email).matches()){
             throw new IllegalArgumentException("Invalid email, please try again.");
         }

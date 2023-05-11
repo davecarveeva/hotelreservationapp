@@ -11,6 +11,7 @@ public class ReservationService {
     private static ReservationService reservationService;
     public Collection<Reservation> reservations = new HashSet<>();
     public static Collection<IRoom> rooms = new HashSet<>();
+    public Collection<IRoom> availableRooms = getAllRooms();
 
     private ReservationService() {}
     public static ReservationService getInstance(){
@@ -34,29 +35,45 @@ public class ReservationService {
         return rooms;
     }
     public Reservation reserveARoom(Customer customer, IRoom room, Date checkInDate, Date checkOutDate){
+        if(!checkReservation(room)) {
+            throw new IllegalArgumentException("Reservation conflict");
+        }
         Reservation reservedRoom = new Reservation(customer, room, checkInDate, checkOutDate);
         reservations.add(reservedRoom);
         return reservedRoom;
-
     }
     public Collection<IRoom> findRooms(Date sampleInDate, Date sampleOutDate){
-        Collection<IRoom> availableRooms = new HashSet<>();
+
         try {
-            if(reservations.isEmpty()) {
-                availableRooms=getAllRooms();
-            }else for (Reservation reserved : reservations) {
-                Date DBin = reserved.getCheckInDate();
-                Date DBout = reserved.getCheckOutDate();
-                if (DBout.after(sampleInDate) && DBout.after(sampleOutDate) && sampleInDate.before(sampleOutDate)) {
-                    availableRooms.add(reserved.getRoom());
-                } else if (DBin.before(sampleInDate) && DBin.before(sampleOutDate) && sampleInDate.before(sampleOutDate)) {
-                    availableRooms.add(reserved.getRoom());
-                } else System.out.println("Sorry, no available rooms with selected Dates");
-            }
+            if(sampleInDate.before(sampleOutDate)) {
+                if (reservations.isEmpty()) {
+                    return availableRooms;
+                } else for (Reservation reserved : reservations) {
+                    Date DBin = reserved.getCheckInDate();
+                    Date DBout = reserved.getCheckOutDate();
+                    if (DBin.before(sampleOutDate) && DBout.after(sampleOutDate)) {
+                        availableRooms.remove(reserved.getRoom());
+                    }
+                    if (DBin.before(sampleInDate) && DBout.after(sampleInDate)) {
+                        availableRooms.remove(reserved.getRoom());
+                    }
+                    if (DBin.after(sampleInDate) && DBout.before(sampleOutDate)) {
+                        availableRooms.remove(reserved.getRoom());
+                    }
+                }
+                return availableRooms;
+            } throw new IllegalArgumentException("Dates are not sequential");
         }catch (Exception ex) {
             throw new IllegalArgumentException("No reservations fit this criteria");
         }
-        return availableRooms;
+    }
+    public boolean checkReservation(IRoom room){
+        for (IRoom availableRoom : availableRooms){
+            if(availableRoom.equals(room)) {
+                return true;
+            }
+        }
+        return false;
     }
     public Collection<Reservation> getCustomerReservation(Customer customer){
         Collection<Reservation> custReserves = new HashSet<>();
@@ -66,11 +83,6 @@ public class ReservationService {
             }
         }
         return custReserves;
-    }
-    public void printAllReservations(){
-        for(Reservation reservation : reservations){
-            System.out.println(reservation.toString());
-        }
     }
     public Collection<Reservation> getAllReservations(){
         return reservations;
